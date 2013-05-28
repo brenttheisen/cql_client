@@ -1,3 +1,4 @@
 *.sw?
 .sw?
 tmp
+lib/cql_client.bundle
