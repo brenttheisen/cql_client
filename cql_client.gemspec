@@ -14,5 +14,5 @@ Gem::Specification.new do |s|
   s.files = `git ls-files README.md LICENSE ext lib`.split
   s.test_files = `git ls-files spec examples`.split
 
-  # s.add_development_dependency 'rspec', '~> 2.8.0'
+  s.add_development_dependency 'rake-compiler'
 end
