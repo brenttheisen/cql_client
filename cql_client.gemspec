@@ -2,6 +2,7 @@ require File.expand_path('../lib/cql_client/version', __FILE__)
 
 Gem::Specification.new do |s|
   s.name = %q{cql_client}
+  s.description = %q{A Ruby gem for accessing Cassandra using libcqlclient.}
   s.version = CqlClient::VERSION
   s.authors = ["Brent Theisen"]
   s.license = "MIT"
