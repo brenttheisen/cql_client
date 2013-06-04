@@ -34,8 +34,12 @@ static VALUE connect(VALUE self, VALUE host, VALUE port) {
 
   void *result;
   int rc = cql_connection_create(&host_args, &result);
-  if(rc == CQL_RESULT_SUCCESS) {
-  }
+  if(process_common_results(rc, result))
+    return Qnil;
+
+  // TODO Do something with the cql_connection struct
+
+  return Qnil;
 }
 
 int process_common_results(int rc, void *result) {
