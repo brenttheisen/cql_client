@@ -1,13 +1,50 @@
 #include <ruby.h>
 #include <cql.h>
 
+#define GET_WRAPPER(self) \
+  mysql_client_wrapper *wrapper; \
+  Data_Get_Struct(self, mysql_client_wrapper, wrapper)
 
-VALUE cConnection;
+typedef struct {
+  cql_connection *connection;
+  int initialized;
+} connection_wrapper;
+
 static ID intern_error_number_eql, intern_consistency_eql, intern_required_nodes_eql, intern_alive_nodes_eql,
   intern_nodes_received_eql, intern_nodes_required_eql, intern_keyspace_eql, intern_table_eql;
 
+VALUE cConnection;
+
+static void rb_connection_mark(void *wrapper) {
+  connection_wrapper *w = wrapper;
+  if(w) {
+    // TODO Call rb_gc_mark on any Ruby alloc'd stuff
+  }
+}
+
+static void rb_mysql_client_free(void *wrapper) {
+  connection_wrapper *w = wrapper;
+
+  // TODO Close connection
+
+  // TODO Call xfree on any Ruby alloc'd stuff
+}
+
+static VALUE allocate(VALUE klass) {
+  connection_wrapper *wrapper;
+  VALUE obj = Data_Make_Struct(klass, connection_wrapper, rb_connection_mark,
+    rb_connection_free, wrapper);
+  wrapper->initialized = 0;
+  wrapper->connection = xmalloc(sizeof(cql_connection));
+
+  return obj;
+}
+
 void init_cql_client_connection() {
   cConnection = rb_define_class_under(mCqlClient, "Connection", rb_cObject);
+
+  rb_define_alloc_func(cConnection, allocate);
+
   rb_define_private_method(cConnection, "initialize_ext", initialize_ext, 0);
   rb_define_private_method(cConnection, "connect", rb_connect, 2;
 
@@ -25,6 +62,9 @@ void init_cql_client_connection() {
 
 static VALUE initialize_ext(VALUE self) {
   // TODO Is this needed?
+  GET_WRAPPER(self)
+
+  wrapper->initialized = 1;
 }
 
 static VALUE connect(VALUE self, VALUE host, VALUE port) {
