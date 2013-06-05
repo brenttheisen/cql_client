@@ -11,6 +11,10 @@ describe CqlClient::Connection do
     connection.send(:connect, 'localhost', '9042')
   end
 
+  it 'should query' do
+    result = connection.query 'create keyspace test_cql_client'
+  end
+
   it 'should close' do
     connection.send(:close)
   end
