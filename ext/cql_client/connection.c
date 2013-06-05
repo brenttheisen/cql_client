@@ -64,6 +64,14 @@ static VALUE rb_connect(VALUE self, VALUE host, VALUE port) {
   return Qnil;
 }
 
+static VALUE rb_close(VALUE self) {
+  GET_WRAPPER(self);
+
+  cql_connection_destroy(wrapper->connection);
+
+  return Qnil;
+}
+
 int process_common_results(int rc, void *result) {
   switch(rc) {
   case CQL_RESULT_CLIENT_ERROR:
@@ -148,6 +156,7 @@ void init_cql_client_connection() {
 
   rb_define_private_method(cConnection, "initialize_ext", initialize_ext, 0);
   rb_define_private_method(cConnection, "connect", rb_connect, 2);
+  rb_define_private_method(cConnection, "close", rb_close, 0);
 
   intern_error_number_eql = rb_intern("error_number=");
   intern_consistency_eql = rb_intern("consistency=");
