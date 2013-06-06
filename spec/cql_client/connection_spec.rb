@@ -11,8 +11,14 @@ describe CqlClient::Connection do
     connection.send(:connect, 'localhost', '9042')
   end
 
-  it 'should query' do
-    result = connection.query 'create keyspace test_cql_client', :any
+  context 'when querying' do
+    it 'should raise an exception with an unknown consistency level' do
+      lambda { connection.query 'bogus query', :bliggity }.should raise_error(ArgumentError, 'Unknown consistency value')
+    end
+
+    it 'should query' do
+      result = connection.query 'create keyspace test_cql_client', :any
+    end
   end
 
   it 'should close' do

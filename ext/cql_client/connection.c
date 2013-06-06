@@ -99,6 +99,8 @@ static VALUE rb_query(VALUE self, VALUE query, VALUE consistency) {
     consistency_val = CQL_CONSISTENCY_LOCAL_QUORUM;
   else if(consistency_id == intern_each_quorum)
     consistency_val = CQL_CONSISTENCY_EACH_QUORUM;
+  else
+    return rb_raise_argument_error("Unknown consistency value");
 
   void *result;
   int rc = cql_connection_query(wrapper->connection, query_val, consistency_val, &result);
