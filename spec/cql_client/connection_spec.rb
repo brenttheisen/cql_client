@@ -12,7 +12,7 @@ describe CqlClient::Connection do
   end
 
   it 'should query' do
-    result = connection.query 'create keyspace test_cql_client'
+    result = connection.query 'create keyspace test_cql_client', :any
   end
 
   it 'should close' do

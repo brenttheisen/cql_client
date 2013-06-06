@@ -1,5 +1,4 @@
-#include <ruby.h>
-#include <cql.h>
+#include <cql_client_ext.h>
 
 #define GET_WRAPPER(self) \
   connection_wrapper *wrapper; \
@@ -12,15 +11,18 @@ typedef struct {
 
 extern VALUE mCqlClient, cClientError, cServerError, cUnavailableServerError, cWriteTimeoutServerError,
   cReadTimeoutServerError, cAlreadyExistsServerError;
+
 static ID intern_error_number_eql, intern_consistency_eql, intern_required_nodes_eql, intern_alive_nodes_eql,
   intern_nodes_received_eql, intern_nodes_required_eql, intern_keyspace_eql, intern_table_eql;
+static ID intern_any, intern_one, intern_two, intern_three, intern_quorum, intern_all, intern_local_quorum,
+  intern_each_quorum;
 
 VALUE cConnection;
 
 static void rb_connection_mark(void *wrapper) {
   connection_wrapper *w = wrapper;
   if(w) {
-    // TODO Call rb_gc_mark on any Ruby alloc'd stuff
+    // Call rb_gc_mark on any Ruby alloc'd stuff
   }
 }
 
@@ -29,7 +31,7 @@ static void rb_connection_free(void *wrapper) {
 
   // TODO Close connection
 
-  // TODO Call xfree on any Ruby alloc'd stuff
+  // Call xfree on any Ruby alloc'd stuff
 }
 
 static VALUE allocate(VALUE klass) {
@@ -56,7 +58,7 @@ static VALUE rb_connect(VALUE self, VALUE host, VALUE port) {
 
   void *result;
   int rc = cql_connection_create(&host_args, &result);
-  if(process_common_results(rc, result))
+  if(handle_error_results(rc, result))
     return Qnil;
 
   // TODO Do something with the cql_connection struct
@@ -72,7 +74,41 @@ static VALUE rb_close(VALUE self) {
   return Qnil;
 }
 
-int process_common_results(int rc, void *result) {
+static VALUE rb_query(VALUE self, VALUE query, VALUE consistency) {
+  GET_WRAPPER(self);
+
+  Check_Type(query, T_STRING);
+  char *query_val = StringValueCStr(query);
+
+  Check_Type(consistency, T_SYMBOL);
+  unsigned short consistency_val;
+  ID consistency_id = SYM2ID(consistency);
+  if(consistency_id == intern_any)
+    consistency_val = CQL_CONSISTENCY_ANY;
+  else if(consistency_id == intern_one)
+    consistency_val = CQL_CONSISTENCY_ONE;
+  else if(consistency_id == intern_two)
+    consistency_val = CQL_CONSISTENCY_TWO;
+  else if(consistency_id == intern_three)
+    consistency_val = CQL_CONSISTENCY_THREE;
+  else if(consistency_id == intern_quorum)
+    consistency_val = CQL_CONSISTENCY_QUORUM;
+  else if(consistency_id == intern_all)
+    consistency_val = CQL_CONSISTENCY_ALL;
+  else if(consistency_id == intern_local_quorum)
+    consistency_val = CQL_CONSISTENCY_LOCAL_QUORUM;
+  else if(consistency_id == intern_each_quorum)
+    consistency_val = CQL_CONSISTENCY_EACH_QUORUM;
+
+  void *result;
+  int rc = cql_connection_query(wrapper->connection, query_val, consistency_val, &result);
+  if(handle_error_results(rc, result))
+    return Qnil;
+
+  return handle_result(result);
+}
+
+int handle_error_results(int rc, void *result) {
   switch(rc) {
   case CQL_RESULT_CLIENT_ERROR:
     {
@@ -157,6 +193,7 @@ void init_cql_client_connection() {
   rb_define_private_method(cConnection, "initialize_ext", initialize_ext, 0);
   rb_define_private_method(cConnection, "connect", rb_connect, 2);
   rb_define_private_method(cConnection, "close", rb_close, 0);
+  rb_define_method(cConnection, "query", rb_query, 2);
 
   intern_error_number_eql = rb_intern("error_number=");
   intern_consistency_eql = rb_intern("consistency=");
@@ -166,4 +203,13 @@ void init_cql_client_connection() {
   intern_nodes_required_eql = rb_intern("nodes_required=");
   intern_keyspace_eql = rb_intern("keyspace=");
   intern_table_eql = rb_intern("table=");
+
+  intern_any = rb_intern("any");
+  intern_one = rb_intern("one");
+  intern_two = rb_intern("two");
+  intern_three = rb_intern("three");
+  intern_quorum = rb_intern("quorum");
+  intern_all = rb_intern("all");
+  intern_local_quorum = rb_intern("local_quorum");
+  intern_each_quorum = rb_intern("each_quorum");
 }

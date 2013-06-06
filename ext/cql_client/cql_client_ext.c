@@ -1,4 +1,5 @@
 #include <ruby.h>
+#include <cql_client_ext.h>
 
 VALUE mCqlClient;
 VALUE cClientError;
