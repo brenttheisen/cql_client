@@ -19,6 +19,7 @@ void Init_cql_client() {
   cArgumentError = rb_const_get(rb_cObject, rb_intern("ArgumentError"));
 
   init_cql_client_connection();
+  init_cql_result();
 }
 
 VALUE rb_raise_argument_error(char *message) {

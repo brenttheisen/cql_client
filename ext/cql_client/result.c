@@ -6,7 +6,9 @@ typedef struct {
 
 extern VALUE mCqlClient;
 
-VALUE cRowsResult, cSetKeyspaceResult, cPreparedRowsResult, cSchemaChangeResult;
+static VALUE cRowsResult, cSetKeyspaceResult, cPreparedRowsResult, cSchemaChangeResult;
+
+static VALUE symbol_created, symbol_updated, symbol_dropped;
 
 
 static void rb_result_mark(void *wrapper) {
@@ -25,29 +27,57 @@ static void rb_result_free(void *wrapper) {
 }
 
 VALUE rb_cql_result_to_obj(cql_result *result) {
-  result_wrapper *wrapper;
-
   VALUE obj;
   switch(result->kind) {
+  case CQL_RESULT_KIND_VOID:
+    obj = Qtrue;
+    break;
   case CQL_RESULT_KIND_ROWS:
-    obj = Data_Make_Struct(cRowsResult, result_wrapper, rb_result_mark, rb_result_free, wrapper);
+    // TODO Implement this
+    // obj = Data_Make_Struct(cRowsResult, result_wrapper, rb_result_mark, rb_result_free, wrapper);
     break;
   case CQL_RESULT_KIND_SET_KEYSPACE:
-    obj = Data_Make_Struct(cSetKeyspaceResult, result_wrapper, rb_result_mark, rb_result_free, wrapper);
+    {
+      VALUE values[1];
+      values[0] = result->data ? rb_str_new2(result->data) : Qnil;
+      obj = rb_class_new_instance(1, values, cSetKeyspaceResult);
+    }
     break;
   case CQL_RESULT_KIND_PREPARED:
-    obj = Data_Make_Struct(cPreparedRowsResult, result_wrapper, rb_result_mark, rb_result_free, wrapper);
+    // TODO Implement this
+    // obj = Data_Make_Struct(cPreparedRowsResult, result_wrapper, rb_result_mark, rb_result_free, wrapper);
     break;
   case CQL_RESULT_KIND_SCHEMA_CHANGE:
-    obj = Data_Make_Struct(cSchemaChangeResult, result_wrapper, rb_result_mark, rb_result_free, wrapper);
+    {
+      cql_schema_change *schema_change = result->data;
+      VALUE change = Qnil;
+      if(schema_change->change) {
+        if(strcmp(schema_change->change, "CREATED") == 0)
+          change = symbol_created;
+        else if(strcmp(schema_change->change, "UPDATED") == 0)
+          change = symbol_updated;
+        else if(strcmp(schema_change->change, "DROPPED") == 0)
+          change = symbol_dropped;
+      }
+
+      VALUE keyspace = schema_change->keyspace ? rb_str_new2(schema_change->keyspace) : Qnil;
+      VALUE table = schema_change->table ? rb_str_new2(schema_change->table) : Qnil;
+
+      VALUE values[3];
+      values[0] = change;
+      values[1] = keyspace;
+      values[2] = table;
+
+      obj = rb_class_new_instance(3, values, cSchemaChangeResult);
+    }
     break;
   default:
     // TODO Raise client error
-    return Qnil;
+    obj = Qnil;
+    break;
   }
 
-  wrapper->result = result;
-  rb_obj_call_init(obj, 0, NULL);
+  cql_result_destroy(result);
 
   return obj;
 }
@@ -57,4 +87,8 @@ void init_cql_result() {
   cSetKeyspaceResult = rb_const_get(mCqlClient, rb_intern("SetKeyspaceResult"));
   cPreparedRowsResult = rb_const_get(mCqlClient, rb_intern("PreparedRowsResult"));
   cSchemaChangeResult = rb_const_get(mCqlClient, rb_intern("SchemaChangeResult"));
+
+  symbol_created = ID2SYM(rb_intern("created"));
+  symbol_updated = ID2SYM(rb_intern("updated"));
+  symbol_dropped = ID2SYM(rb_intern("dropped"));
 }

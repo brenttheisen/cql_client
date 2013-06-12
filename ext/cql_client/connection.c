@@ -19,6 +19,9 @@ static ID intern_any, intern_one, intern_two, intern_three, intern_quorum, inter
 
 VALUE cConnection;
 
+VALUE handle_result(cql_result *result);
+
+
 static void rb_connection_mark(void *wrapper) {
   connection_wrapper *w = wrapper;
   if(w) {
@@ -108,26 +111,7 @@ static VALUE rb_query(VALUE self, VALUE query, VALUE consistency) {
   if(handle_error_results(rc, result))
     return Qnil;
 
-  return handle_result(result);
-}
-
-int handle_result(cql_result *result) {
-  switch(result->kind) {
-  case CQL_RESULT_KIND_VOID:
-    return Qtrue;
-  case CQL_RESULT_KIND_ROWS:
-    // TODO Implement this
-    return Qnil;
-  case CQL_RESULT_KIND_SET_KEYSPACE:
-    // TODO Implement this
-    return Qnil;
-  case CQL_RESULT_KIND_PREPARED:
-    // TODO Implement this
-    return Qnil;
-  case CQL_RESULT_KIND_SCHEMA_CHANGE:
-    // TODO Implement this
-    return Qnil;
-  }
+  return rb_cql_result_to_obj(result);
 }
 
 int handle_error_results(int rc, void *result) {
