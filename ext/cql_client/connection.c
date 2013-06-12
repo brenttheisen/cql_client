@@ -111,6 +111,25 @@ static VALUE rb_query(VALUE self, VALUE query, VALUE consistency) {
   return handle_result(result);
 }
 
+int handle_result(cql_result *result) {
+  switch(result->kind) {
+  case CQL_RESULT_KIND_VOID:
+    return Qtrue;
+  case CQL_RESULT_KIND_ROWS:
+    // TODO Implement this
+    return Qnil;
+  case CQL_RESULT_KIND_SET_KEYSPACE:
+    // TODO Implement this
+    return Qnil;
+  case CQL_RESULT_KIND_PREPARED:
+    // TODO Implement this
+    return Qnil;
+  case CQL_RESULT_KIND_SCHEMA_CHANGE:
+    // TODO Implement this
+    return Qnil;
+  }
+}
+
 int handle_error_results(int rc, void *result) {
   switch(rc) {
   case CQL_RESULT_CLIENT_ERROR:
