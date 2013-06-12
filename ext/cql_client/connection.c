@@ -61,7 +61,8 @@ static VALUE rb_connect(VALUE self, VALUE host, VALUE port) {
   if(handle_error_results(rc, result))
     return Qnil;
 
-  // TODO Do something with the cql_connection struct
+  GET_WRAPPER(self);
+  wrapper->connection = result;
 
   return Qnil;
 }
