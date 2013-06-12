@@ -17,9 +17,9 @@ static ID intern_error_number_eql, intern_consistency_eql, intern_required_nodes
 static ID intern_any, intern_one, intern_two, intern_three, intern_quorum, intern_all, intern_local_quorum,
   intern_each_quorum;
 
-VALUE cConnection;
+static VALUE cConnection;
 
-VALUE handle_result(cql_result *result);
+static int handle_error_results(int rc, void *result);
 
 
 static void rb_connection_mark(void *wrapper) {
@@ -114,7 +114,7 @@ static VALUE rb_query(VALUE self, VALUE query, VALUE consistency) {
   return rb_cql_result_to_obj(result);
 }
 
-int handle_error_results(int rc, void *result) {
+static int handle_error_results(int rc, void *result) {
   switch(rc) {
   case CQL_RESULT_CLIENT_ERROR:
     {
