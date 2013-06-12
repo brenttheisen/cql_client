@@ -35,4 +35,32 @@ describe CqlClient::SchemaChangeResult do
     result.keyspace.should == 'test_cql_client'
     result.table.should == 'bliggity'
   end
+
+  it 'should handle updated' do
+    result = connection.query("alter keyspace test_cql_client with durable_writes = false", :any)
+    result.should be_an_instance_of(CqlClient::SchemaChangeResult)
+    result.change.should == :updated
+    result.keyspace.should == 'test_cql_client'
+    result.table.should == ''
+
+    result = connection.query('alter table test_cql_client.bliggity add whatever varchar', :any)
+    result.should be_an_instance_of(CqlClient::SchemaChangeResult)
+    result.change.should == :updated
+    result.keyspace.should == 'test_cql_client'
+    result.table.should == 'bliggity'
+  end
+
+  it 'should handle dropped' do
+    result = connection.query('drop table test_cql_client.bliggity', :any)
+    result.should be_an_instance_of(CqlClient::SchemaChangeResult)
+    result.change.should == :dropped
+    result.keyspace.should == 'test_cql_client'
+    result.table.should == 'bliggity'
+
+    result = connection.query("drop keyspace test_cql_client", :any)
+    result.should be_an_instance_of(CqlClient::SchemaChangeResult)
+    result.change.should == :dropped
+    result.keyspace.should == 'test_cql_client'
+    result.table.should == ''
+  end
 end
