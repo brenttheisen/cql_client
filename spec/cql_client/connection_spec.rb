@@ -17,7 +17,7 @@ describe CqlClient::Connection do
     end
 
     it 'should query' do
-      result = connection.query 'create keyspace test_cql_client', :any
+      result = connection.query "create keyspace test_cql_client with replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}", :any
     end
   end
 
