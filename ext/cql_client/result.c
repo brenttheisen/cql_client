@@ -72,9 +72,7 @@ VALUE rb_cql_result_to_obj(cql_result *result) {
     }
     break;
   default:
-    // TODO Raise client error
-    obj = Qnil;
-    break;
+    return rb_raise_error(cStandardError, "Unknown result kind");
   }
 
   cql_result_destroy(result);
