@@ -1,5 +1,8 @@
 #include <cql_client_ext.h>
 
+#define CQL_RESULT(obj) ((result_wrapper*) DATA_PTR(obj))
+#define CQL_ROWS_RESULT(obj) ((cql_rows_result*) (CQL_RESULT(obj)->result))
+
 typedef struct {
   cql_result *result;
 } result_wrapper;
@@ -88,11 +91,32 @@ VALUE rb_cql_result_to_obj(cql_result *result) {
   return obj;
 }
 
+static VALUE rb_cql_result_each(int argc, VALUE *argv, VALUE self) {
+  // TODO Implement this
+  return Qnil;
+}
+
+static VALUE rb_cql_result_fields(VALUE self) {
+  // TODO Implement this
+  return Qnil;
+}
+
+static VALUE rb_cql_result_count(VALUE self) {
+  cql_rows_result *rows_result = CQL_ROWS_RESULT(self);
+
+  return LONG2NUM(rows_result->rows_count);
+}
+
 void init_cql_result() {
   cRowsResult = rb_const_get(mCqlClient, rb_intern("RowsResult"));
   cSetKeyspaceResult = rb_const_get(mCqlClient, rb_intern("SetKeyspaceResult"));
   cPreparedRowsResult = rb_const_get(mCqlClient, rb_intern("PreparedRowsResult"));
   cSchemaChangeResult = rb_const_get(mCqlClient, rb_intern("SchemaChangeResult"));
+
+  rb_define_method(cRowsResult, "each", rb_cql_result_each, -1);
+  rb_define_method(cRowsResult, "fields", rb_cql_result_fields, 0);
+  rb_define_method(cRowsResult, "count", rb_cql_result_count, 0);
+  rb_define_alias(cRowsResult, "size", "count");
 
   symbol_created = ID2SYM(rb_intern("created"));
   symbol_updated = ID2SYM(rb_intern("updated"));
