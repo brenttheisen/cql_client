@@ -25,6 +25,8 @@ static int handle_error_results(int rc, void *result);
 static void rb_connection_mark(void *wrapper) {
   connection_wrapper *w = wrapper;
   if(w) {
+    cql_connection_destroy(w->connection);
+
     // Call rb_gc_mark on any Ruby alloc'd stuff
   }
 }

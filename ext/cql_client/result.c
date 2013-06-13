@@ -21,20 +21,27 @@ static void rb_result_mark(void *wrapper) {
 static void rb_result_free(void *wrapper) {
   result_wrapper *w = wrapper;
 
-  // TODO Close connection
+  if(wrapper) {
+    cql_result_destroy(w->result);
 
-  // Call xfree on any Ruby alloc'd stuff
+    // Call xfree on any Ruby alloc'd stuff
+  }
 }
 
 VALUE rb_cql_result_to_obj(cql_result *result) {
   VALUE obj;
+
   switch(result->kind) {
   case CQL_RESULT_KIND_VOID:
     obj = Qtrue;
     break;
   case CQL_RESULT_KIND_ROWS:
-    // TODO Implement this
-    // obj = Data_Make_Struct(cRowsResult, result_wrapper, rb_result_mark, rb_result_free, wrapper);
+    {
+      result_wrapper *wrapper;
+      obj = Data_Make_Struct(cRowsResult, result_wrapper, rb_result_mark, rb_result_free, wrapper);
+      wrapper->result = result;
+      rb_call_init(obj, 0, NULL);
+    }
     break;
   case CQL_RESULT_KIND_SET_KEYSPACE:
     {
@@ -72,10 +79,11 @@ VALUE rb_cql_result_to_obj(cql_result *result) {
     }
     break;
   default:
-    return rb_raise_error(cStandardError, "Unknown result kind");
+    obj = rb_raise_error(cStandardError, "Unknown result kind");
   }
 
-  cql_result_destroy(result);
+  if(result->kind != CQL_RESULT_KIND_ROWS)
+    cql_result_destroy(result);
 
   return obj;
 }
