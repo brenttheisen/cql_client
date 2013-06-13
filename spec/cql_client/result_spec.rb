@@ -64,3 +64,31 @@ describe CqlClient::SchemaChangeResult do
     result.table.should == ''
   end
 end
+
+describe CqlClient::RowsResult do
+  let(:connection) { CqlClient::Connection.new 'localhost', '9042' }
+
+  before :all do
+    connection.query 'drop keyspace test_cql_client', :any rescue nil
+    connection.query "create keyspace test_cql_client with replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}", :any
+    connection.query(<<-EOC, :any)
+      create table test_cql_client.test_table (
+        id int primary key,
+        whatever varchar
+      )
+    EOC
+    connection.query("insert into test_cql_client.test_table (id, whatever) values (1, 'First')", :any)
+    connection.query("insert into test_cql_client.test_table (id, whatever) values (2, 'Second')", :any)
+  end
+
+  after :all do
+    connection.query 'drop keyspace test_cql_client', :any
+  end
+
+  it 'should count' do
+    result = connection.query('select * from test_cql_client.test_table', :one)
+    result.should be_an_instance_of(CqlClient::RowsResult)
+    result.count.should == 2
+  end
+
+end

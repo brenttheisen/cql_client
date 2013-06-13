@@ -1,7 +1,8 @@
 #include <cql_client_ext.h>
 
-#define CQL_RESULT(obj) ((result_wrapper*) DATA_PTR(obj))
-#define CQL_ROWS_RESULT(obj) ((cql_rows_result*) (CQL_RESULT(obj)->result))
+#define WRAPPER(obj) ((result_wrapper*) DATA_PTR(obj))
+#define CQL_RESULT(obj) ((cql_result*) (WRAPPER(obj)->result))
+#define CQL_ROWS_RESULT(obj) ((cql_rows_result*) (CQL_RESULT(obj)->data))
 
 typedef struct {
   cql_result *result;
@@ -28,6 +29,7 @@ static void rb_result_free(void *wrapper) {
     cql_result_destroy(w->result);
 
     // Call xfree on any Ruby alloc'd stuff
+    xfree(wrapper);
   }
 }
 
@@ -43,7 +45,8 @@ VALUE rb_cql_result_to_obj(cql_result *result) {
       result_wrapper *wrapper;
       obj = Data_Make_Struct(cRowsResult, result_wrapper, rb_result_mark, rb_result_free, wrapper);
       wrapper->result = result;
-      rb_call_init(obj, 0, NULL);
+
+      rb_obj_call_init(obj, 0, NULL);
     }
     break;
   case CQL_RESULT_KIND_SET_KEYSPACE:
@@ -104,7 +107,7 @@ static VALUE rb_cql_result_fields(VALUE self) {
 static VALUE rb_cql_result_count(VALUE self) {
   cql_rows_result *rows_result = CQL_ROWS_RESULT(self);
 
-  return LONG2NUM(rows_result->rows_count);
+  return ULONG2NUM(rows_result->rows_count);
 }
 
 void init_cql_result() {
